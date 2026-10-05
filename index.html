@@ -1,94 +1,216 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Portafolio | Estrada Ramos Andy</title>
-<meta name="description" content="Portafolio académico de Estrada Ramos Andy.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portafolio | Estrada Ramos Andy</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="assets/img/logo.svg">
 </head>
-<body id="top">
-<header class="nav">
-  <a href="#inicio" class="logo"><span>A</span> Andy Estrada</a>
-  <nav id="menu">
-    <a href="#inicio">Inicio</a><a href="#sobre-mi">Sobre mí</a><a href="#actividades">Actividades</a><a href="#proyectos">Proyectos entregados</a>
-  </nav>
-  <button class="btn ghost" id="openLogin">Iniciar sesión</button>
-  <button class="burger" id="burger" aria-label="Menú">☰</button>
-</header>
+<body>
+  <div class="ambient ambientOne"></div>
+  <div class="ambient ambientTwo"></div>
 
-<main>
-<section id="inicio" class="hero">
-  <div class="hero-text">
-    <p class="tag">Portafolio académico 2026</p>
-    <h1>Ideas que se convierten en <em>soluciones.</em></h1>
-    <p class="lead">Soy <strong>Estrada Ramos Andy</strong>, estudiante de Ingeniería de Sistemas y Computación. Aquí reúno mis actividades, proyectos y evidencias académicas.</p>
-    <div class="cta"><a class="btn" href="#actividades">Explorar actividades →</a><a class="btn ghost" href="#sobre-mi">Conocer mi perfil</a></div>
-    <div class="stats"><div><b>02</b>Cursos</div><div><b>04</b>Unidades</div><div><b>16</b>Semanas por curso</div></div>
+  <aside class="sidebar">
+    <a class="brand" href="#inicio">
+      <img src="assets/img/logo.svg" alt="Logo Andy">
+      <span>Andy<span>Dev</span></span>
+    </a>
+    <nav>
+      <a href="#inicio" class="active">Inicio</a>
+      <a href="#sobre-mi">Sobre mí</a>
+      <a href="#actividades">Actividades</a>
+      <a href="#contacto">Contacto</a>
+      <button id="openLogin">Admin</button>
+    </nav>
+  </aside>
+
+  <main>
+    <section id="inicio" class="hero">
+      <div class="heroText reveal">
+        <p class="tag">Ingeniería de Sistemas y Computación</p>
+        <h1>Portafolio académico tecnológico</h1>
+        <p>Bienvenido al espacio digital de Estrada Ramos Andy. Aquí se presentan actividades, evidencias y avances por curso, unidad y semana.</p>
+        <div class="heroBadges">
+          <span>Diseño responsive</span>
+          <span>Panel administrador</span>
+          <span>Archivos y enlaces</span>
+        </div>
+        <div class="heroActions">
+          <a href="#actividades">Ver actividades</a>
+          <button id="quickAdmin">Subir actividad</button>
+        </div>
+      </div>
+      <div class="profilePanel reveal">
+        <img class="profilePhoto" src="assets/img/perfil-andy.png" alt="Foto de Estrada Ramos Andy">
+        <h2>Estrada Ramos Andy</h2>
+        <p>UPLA | Huancayo, Perú</p>
+        <div class="stats">
+          <span><strong id="totalActivities">0</strong>Actividades</span>
+          <span><strong>2</strong>Cursos</span>
+          <span><strong>16</strong>Semanas</span>
+        </div>
+        <div class="progressBox">
+          <div>
+            <span>Progreso visual</span>
+            <strong>Portafolio activo</strong>
+          </div>
+          <div class="progressTrack"><span></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sobre-mi" class="section reveal">
+      <div class="sectionTitle">
+        <p>Perfil</p>
+        <h2>Sobre mí</h2>
+      </div>
+      <div class="aboutGrid">
+        <article>
+          <h3>Presentación</h3>
+          <p>Soy estudiante de Ingeniería de Sistemas y Computación. Este portafolio reúne mis trabajos, códigos, prácticas, enlaces y archivos desarrollados durante el ciclo académico.</p>
+        </article>
+        <article>
+          <h3>Objetivo</h3>
+          <p>Organizar evidencias por curso, unidad y semana para mostrar el progreso académico de forma clara, ordenada y visual.</p>
+        </article>
+        <article>
+          <h3>Habilidades</h3>
+          <div class="chips">
+            <span>Java</span>
+            <span>HTML</span>
+            <span>CSS</span>
+            <span>JavaScript</span>
+            <span>SQL</span>
+            <span>Diseño web</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="actividades" class="section reveal">
+      <div class="sectionTitle rowTitle">
+        <div>
+          <p>Evidencias</p>
+          <h2>Actividades por curso</h2>
+        </div>
+        <div class="filters">
+          <select id="courseFilter">
+            <option value="todos">Todos los cursos</option>
+            <option value="Algoritmos">Algoritmos</option>
+            <option value="Aplicaciones">Aplicaciones</option>
+          </select>
+          <input id="searchInput" type="search" placeholder="Buscar actividad">
+        </div>
+      </div>
+      <div class="courseTabs">
+        <button class="tab active" data-course="todos">Todo</button>
+        <button class="tab" data-course="Algoritmos">Algoritmos</button>
+        <button class="tab" data-course="Aplicaciones">Aplicaciones</button>
+      </div>
+      <div id="activityGrid" class="activityGrid"></div>
+      <div id="emptyState" class="emptyState">
+        <h3>No hay actividades registradas</h3>
+        <p>Ingresa al panel administrador y agrega tus evidencias.</p>
+      </div>
+    </section>
+
+    <section id="contacto" class="section contact reveal">
+      <div>
+        <p class="tag">Contacto académico</p>
+        <h2>Estrada Ramos Andy</h2>
+        <p>Universidad Peruana Los Andes | Ingeniería de Sistemas y Computación</p>
+      </div>
+      <a href="mailto:andy.estudiante@upla.edu.pe">andy.estudiante@upla.edu.pe</a>
+    </section>
+  </main>
+
+  <div id="loginModal" class="modal">
+    <div class="modalCard small">
+      <button class="close" data-close="loginModal">×</button>
+      <h2>Acceso administrador</h2>
+      <p>Ingresa para registrar y modificar actividades.</p>
+      <form id="loginForm">
+        <label>Usuario
+          <input id="userInput" type="text" placeholder="admin" required>
+        </label>
+        <label>Contraseña
+          <input id="passInput" type="password" placeholder="12345" required>
+        </label>
+        <button type="submit">Ingresar</button>
+      </form>
+      <span class="hint">Usuario: admin | Clave: 12345</span>
+    </div>
   </div>
-  <div class="hero-card">
-    <div class="avatar">AE</div>
-    <h3>Estrada Ramos Andy</h3>
-    <p>Ingeniería de Sistemas y Computación</p>
-    <div class="chips"><span>JAVA</span><span>WEB</span><span>DB</span></div>
+
+  <div id="adminModal" class="modal">
+    <div class="modalCard adminCard">
+      <button class="close" data-close="adminModal">×</button>
+      <div class="adminHeader">
+        <div>
+          <p class="tag">Panel privado</p>
+          <h2>Gestor de actividades</h2>
+        </div>
+        <button id="logoutBtn" class="ghost">Cerrar sesión</button>
+      </div>
+
+      <form id="activityForm" class="adminForm">
+        <input type="hidden" id="editId">
+        <div class="formGrid">
+          <label>Curso
+            <select id="courseInput" required>
+              <option value="Algoritmos">Algoritmos</option>
+              <option value="Aplicaciones">Aplicaciones</option>
+            </select>
+          </label>
+          <label>Unidad
+            <select id="unitInput" required>
+              <option value="1">Unidad 1</option>
+              <option value="2">Unidad 2</option>
+              <option value="3">Unidad 3</option>
+              <option value="4">Unidad 4</option>
+            </select>
+          </label>
+          <label>Semana
+            <select id="weekInput" required></select>
+          </label>
+          <label>Fecha
+            <input id="dateInput" type="date" required>
+          </label>
+        </div>
+        <label>Título
+          <input id="titleInput" type="text" placeholder="Ejemplo: Actividad de matrices en Java" required>
+        </label>
+        <label>Descripción
+          <textarea id="descriptionInput" rows="4" placeholder="Describe el desarrollo de la actividad" required></textarea>
+        </label>
+        <label>Enlace externo
+          <input id="linkInput" type="url" placeholder="https://...">
+        </label>
+        <label>Subir archivos o imágenes
+          <input id="fileInput" type="file" multiple>
+        </label>
+        <div id="selectedFiles" class="selectedFiles"></div>
+        <div class="formActions">
+          <button type="submit" id="saveBtn">Guardar actividad</button>
+          <button type="button" id="resetForm" class="ghost">Limpiar</button>
+        </div>
+      </form>
+
+      <div class="adminList">
+        <h3>Actividades registradas</h3>
+        <div id="adminActivities"></div>
+      </div>
+    </div>
   </div>
-</section>
 
-<section id="sobre-mi" class="section">
-  <p class="tag">01 · Sobre mí</p>
-  <h2>Perfil académico y tecnológico</h2>
-  <p class="sub">Mi formación combina programación, bases de datos y desarrollo de soluciones digitales.</p>
-  <div class="grid3 info">
-    <div class="card"><small>Universidad</small><b>Universidad Peruana Los Andes</b></div>
-    <div class="card"><small>Enfoque</small><b>Desarrollo de Software</b></div>
-    <div class="card"><small>Área</small><b>Programación y tecnología</b></div>
+  <div id="previewModal" class="modal">
+    <div class="modalCard previewCard">
+      <button class="close" data-close="previewModal">×</button>
+      <div id="previewContent"></div>
+    </div>
   </div>
-  <div class="grid3">
-    <div class="card"><h3>Mi perfil</h3><p>Me interesa crear software útil, comprender la lógica detrás de los sistemas y transformar ideas en proyectos funcionales.</p></div>
-    <div class="card"><h3>Habilidades</h3><div class="chips dark"><span>Java</span><span>HTML</span><span>CSS</span><span>JavaScript</span><span>JSP</span><span>GitHub</span><span>Power Apps</span><span>SharePoint</span></div></div>
-    <div class="card"><h3>Objetivo</h3><p>Fortalecer mis conocimientos y documentar mi progreso mediante actividades, proyectos y evidencias organizadas por curso.</p></div>
-  </div>
-</section>
 
-<section id="actividades" class="section alt">
-  <p class="tag">02 · Actividades</p>
-  <h2 id="courseTitle">Algoritmos · 4 unidades</h2>
-  <p class="sub">Selecciona una unidad. Cada curso contiene 4 unidades y cada unidad tiene 4 semanas.</p>
-  <div class="tabs" id="courseTabs"><button class="active" data-c="Algoritmos">Algoritmos</button><button data-c="Aplicaciones">Aplicaciones</button></div>
-  <div class="units" id="units"></div>
-</section>
-
-<section id="proyectos" class="section">
-  <p class="tag">03 · Proyectos entregados</p>
-  <h2>Actividades publicadas</h2>
-  <p class="sub">Consulta en un solo lugar las actividades ya publicadas. Puedes abrirlas en línea o descargar sus archivos.</p>
-  <div class="tabs" id="filterTabs"><button class="active" data-f="Todos">Todos</button><button data-f="Algoritmos">Algoritmos</button><button data-f="Aplicaciones">Aplicaciones</button></div>
-  <p class="count"><b id="count">0</b> publicadas</p>
-  <div class="grid3" id="projects"></div>
-</section>
-</main>
-
-<footer>
-  <div><h3>Dos cursos. Un solo espacio para mostrar mi progreso.</h3><p>Cambia entre Algoritmos y Aplicaciones desde las pestañas de Actividades.</p></div>
-  <a class="btn ghost light" href="#top">Volver arriba ↑</a>
-  <small>© Estrada Ramos Andy · Portafolio académico · Ingeniería de Sistemas</small>
-</footer>
-
-<div class="modal" id="modal">
-  <div class="box">
-    <button class="close" id="closeLogin">×</button>
-    <div class="avatar sm">AE</div>
-    <p class="tag">Acceso privado</p>
-    <h2>Bienvenido, Andy</h2>
-    <p class="sub">Ingresa a tu panel para administrar las actividades de ambos cursos.</p>
-    <label>Usuario<input type="text" placeholder="usuario"></label>
-    <label>Contraseña<input type="password" placeholder="••••••••"></label>
-    <button class="btn full" id="enter">Entrar al panel →</button>
-    <p class="note" id="note">Demostración visual: el acceso real requiere un backend.</p>
-  </div>
-</div>
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
