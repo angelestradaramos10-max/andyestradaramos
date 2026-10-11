@@ -596,6 +596,20 @@ label {
 
 .danger { color: var(--danger) !important; }
 
+.formStatus {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.formStatus.info { color: var(--muted); }
+.formStatus.ok { color: #c9fbe9; background: rgba(46, 230, 200, .1); border-color: rgba(46, 230, 200, .4); }
+.formStatus.error { color: #ffd6d6; background: rgba(255, 107, 107, .1); border-color: rgba(255, 107, 107, .45); }
+
 .previewFiles {
   display: grid;
   gap: 10px;
@@ -810,32 +824,15 @@ label {
     </section>
   </main>
 
-  <div id="loginModal" class="modal">
-    <div class="modalCard small">
-      <button class="close" data-close="loginModal">×</button>
-      <h2>Acceso administrador</h2>
-      <p>Ingresa para registrar y modificar actividades.</p>
-      <form id="loginForm">
-        <label>Usuario
-          <input id="userInput" type="text" placeholder="Usuario" autocomplete="username" required>
-        </label>
-        <label>Contraseña
-          <input id="passInput" type="password" placeholder="Contraseña" autocomplete="current-password" required>
-        </label>
-        <button type="submit">Ingresar</button>
-      </form>
-          </div>
-  </div>
-
   <div id="adminModal" class="modal">
     <div class="modalCard adminCard">
       <button class="close" data-close="adminModal">×</button>
       <div class="adminHeader">
         <div>
-          <p class="tag">Panel privado</p>
+          <p class="tag">Panel de administración</p>
           <h2>Gestor de actividades</h2>
         </div>
-        <button id="logoutBtn" class="ghost">Cerrar sesión</button>
+        <button id="closeAdminBtn" class="ghost" type="button">Cerrar panel</button>
       </div>
 
       <form id="activityForm" class="adminForm">
@@ -879,6 +876,7 @@ label {
           <button type="submit" id="saveBtn">Guardar actividad</button>
           <button type="button" id="resetForm" class="ghost">Limpiar</button>
         </div>
+        <p id="formStatus" class="formStatus" hidden></p>
       </form>
 
       <div class="adminList">
@@ -900,7 +898,6 @@ label {
 const SUPABASE_URL = "https://wrydtnlpzszrxzlsadys.supabase.co";
 const SUPABASE_KEY = "sb_publishable_atox4cOKHn7LofGsbLzySA_9SEl-R7T";
 const BUCKET_NAME = "archivos";
-const SESSION_KEY = "andy_portafolio_admin";
 
 if (typeof supabase === "undefined") {
   alert("No se pudo cargar Supabase. Revisa tu conexión a internet y recarga la página.");
@@ -1078,12 +1075,38 @@ function closeModal(id) {
 }
 
 function openAdmin() {
-  if (sessionStorage.getItem(SESSION_KEY) === "true") {
-    openModal("adminModal");
-    renderAdminList();
-  } else {
-    openModal("loginModal");
+  openModal("adminModal");
+  renderAdminList();
+}
+
+function setStatus(text, type) {
+  const box = $("#formStatus");
+  if (!text) {
+    box.hidden = true;
+    box.textContent = "";
+    return;
   }
+  box.className = `formStatus ${type || "info"}`;
+  box.textContent = text;
+  box.hidden = false;
+}
+
+function explainError(error) {
+  const msg = String(error?.message || error || "");
+  const low = msg.toLowerCase();
+  if (low.includes("bucket not found")) {
+    return `No existe el bucket "${BUCKET_NAME}" en Supabase Storage. Ejecuta el SQL de almacenamiento (ver instrucciones).`;
+  }
+  if (low.includes("row-level security") || low.includes("violates")) {
+    return "Supabase no deja subir archivos todavía (faltan los permisos de Storage). Ejecuta el SQL de almacenamiento (ver instrucciones).";
+  }
+  if (low.includes("failed to fetch") || low.includes("networkerror") || low.includes("load failed")) {
+    return "No hay conexión con Supabase. Revisa tu internet o si el proyecto de Supabase está pausado (entra a supabase.com y pulsa Restore).";
+  }
+  if (low.includes("does not exist") || low.includes("could not find the table") || low.includes("relationship")) {
+    return "Falta una tabla en Supabase. Ejecuta de nuevo el archivo database.sql en el SQL Editor.";
+  }
+  return msg || "Error desconocido.";
 }
 
 function clearForm() {
@@ -1093,6 +1116,7 @@ function clearForm() {
   $("#selectedFiles").innerHTML = "";
   $("#saveBtn").textContent = "Guardar actividad";
   fillWeeks();
+  setStatus("");
 }
 
 function handleFiles(event) {
@@ -1114,27 +1138,39 @@ function removePendingFile(index) {
 
 async function uploadActivityFiles(activityId) {
   const uploaded = [];
+  const failed = [];
 
   for (const file of pendingFiles) {
-    const cleanName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.\-_]/g, "_");
-    const filePath = `actividad_${activityId}/${Date.now()}_${cleanName}`;
-    const { error: uploadError } = await db.storage.from(BUCKET_NAME).upload(filePath, file, { upsert: true });
-    if (uploadError) throw uploadError;
+    try {
+      const cleanName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.\-_]/g, "_");
+      const filePath = `actividad_${activityId}/${Date.now()}_${cleanName}`;
+      const { error: uploadError } = await db.storage.from(BUCKET_NAME).upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
 
-    const { data } = db.storage.from(BUCKET_NAME).getPublicUrl(filePath);
-    uploaded.push({
-      actividad_id: activityId,
-      nombre_archivo: file.name,
-      tipo_archivo: file.type,
-      url_archivo: data.publicUrl,
-      ruta_storage: filePath
-    });
+      const { data } = db.storage.from(BUCKET_NAME).getPublicUrl(filePath);
+      uploaded.push({
+        actividad_id: activityId,
+        nombre_archivo: file.name,
+        tipo_archivo: file.type,
+        url_archivo: data.publicUrl,
+        ruta_storage: filePath
+      });
+    } catch (error) {
+      console.error("Error subiendo", file.name, error);
+      failed.push({ name: file.name, reason: explainError(error) });
+    }
   }
 
   if (uploaded.length) {
     const { error } = await db.from("archivos").insert(uploaded);
-    if (error) throw error;
+    if (error) {
+      console.error(error);
+      uploaded.forEach(file => failed.push({ name: file.nombre_archivo, reason: explainError(error) }));
+      return { okCount: 0, failed };
+    }
   }
+
+  return { okCount: uploaded.length, failed };
 }
 
 async function saveActivity(event) {
@@ -1142,13 +1178,14 @@ async function saveActivity(event) {
   const saveBtn = $("#saveBtn");
   saveBtn.disabled = true;
   saveBtn.textContent = "Guardando...";
+  setStatus("Guardando actividad...", "info");
 
+  // Paso 1: guardar los datos de la actividad (título, descripción, enlace...)
+  let activityId = $("#editId").value;
   try {
-    const id = $("#editId").value;
     const courseId = getCourseId($("#courseInput").value);
     if (!courseId) {
-      alert("No se encontró el curso en Supabase.");
-      return;
+      throw new Error("No se encontró el curso en Supabase. Ejecuta database.sql (tabla cursos).");
     }
 
     const payload = {
@@ -1161,14 +1198,15 @@ async function saveActivity(event) {
       enlace: $("#linkInput").value.trim() || null
     };
 
-    let activityId = id;
-    if (id) {
-      const { error } = await db.from("actividades").update(payload).eq("id", id);
+    if (activityId) {
+      const { error } = await db.from("actividades").update(payload).eq("id", activityId);
       if (error) throw error;
     } else {
       const { data, error } = await db.from("actividades").insert(payload).select("id").single();
       if (error) throw error;
       activityId = data.id;
+      // Si algo falla más adelante, un nuevo clic en Guardar actualiza esta misma actividad (no crea otra repetida).
+      $("#editId").value = activityId;
     }
 
     await db.from("enlaces").delete().eq("actividad_id", activityId);
@@ -1179,18 +1217,46 @@ async function saveActivity(event) {
         url: $("#linkInput").value.trim()
       });
     }
-
-    await uploadActivityFiles(activityId);
-    await loadActivities();
-    clearForm();
-    alert("Actividad guardada correctamente.");
   } catch (error) {
     console.error(error);
-    alert(`No se pudo guardar: ${error.message}`);
-  } finally {
+    setStatus(`No se pudo guardar la actividad.\n${explainError(error)}`, "error");
     saveBtn.disabled = false;
+    saveBtn.textContent = $("#editId").value ? "Actualizar actividad" : "Guardar actividad";
+    return;
+  }
+
+  // Paso 2: subir los archivos (si hay). Si fallan, la actividad ya quedó guardada.
+  let result = { okCount: 0, failed: [] };
+  try {
+    if (pendingFiles.length) {
+      setStatus("Actividad guardada. Subiendo archivos...", "info");
+      result = await uploadActivityFiles(activityId);
+    }
+  } catch (error) {
+    console.error(error);
+    result = { okCount: 0, failed: pendingFiles.map(file => ({ name: file.name, reason: explainError(error) })) };
+  }
+
+  try {
+    await loadActivities();
+  } catch (error) {
+    console.error(error);
+  }
+
+  if (result.failed.length) {
+    const lines = result.failed.map(item => `• ${item.name}: ${item.reason}`).join("\n");
+    pendingFiles = result.failed.length === pendingFiles.length
+      ? pendingFiles
+      : pendingFiles.filter(file => result.failed.some(item => item.name === file.name));
+    renderSelectedFiles();
+    setStatus(`La actividad se guardó, pero estos archivos NO se subieron:\n${lines}`, "error");
+    saveBtn.textContent = "Actualizar actividad";
+  } else {
+    clearForm();
+    setStatus("Actividad guardada correctamente.", "ok");
     saveBtn.textContent = "Guardar actividad";
   }
+  saveBtn.disabled = false;
 }
 
 function editActivity(id) {
@@ -1208,6 +1274,7 @@ function editActivity(id) {
   pendingFiles = [];
   $("#selectedFiles").innerHTML = item.files.map(file => `<span class="filePill">${escapeHTML(file.name)}</span>`).join("");
   $("#saveBtn").textContent = "Actualizar actividad";
+  setStatus("");
   $("#activityForm").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -1256,36 +1323,6 @@ function openPreview(id) {
   openModal("previewModal");
 }
 
-async function loginAdmin(event) {
-  event.preventDefault();
-  const user = $("#userInput").value.trim();
-  const pass = $("#passInput").value.trim();
-
-  const { data, error } = await db
-    .from("usuarios")
-    .select("id, usuario, nombre, rol")
-    .eq("usuario", user)
-    .eq("clave", pass)
-    .maybeSingle();
-
-  if (error) {
-    console.error(error);
-    alert("Error al verificar el usuario.");
-    return;
-  }
-
-  if (!data) {
-    alert("Usuario o contraseña incorrectos.");
-    return;
-  }
-
-  sessionStorage.setItem(SESSION_KEY, "true");
-  closeModal("loginModal");
-  openModal("adminModal");
-  renderAdminList();
-  $("#loginForm").reset();
-}
-
 function bindEvents() {
   $("#openLogin").addEventListener("click", openAdmin);
   $("#quickAdmin").addEventListener("click", openAdmin);
@@ -1298,11 +1335,7 @@ function bindEvents() {
   $("#activityForm").addEventListener("submit", saveActivity);
   $("#fileInput").addEventListener("change", handleFiles);
   $("#resetForm").addEventListener("click", clearForm);
-  $("#logoutBtn").addEventListener("click", () => {
-    sessionStorage.removeItem(SESSION_KEY);
-    closeModal("adminModal");
-  });
-  $("#loginForm").addEventListener("submit", loginAdmin);
+  $("#closeAdminBtn").addEventListener("click", () => closeModal("adminModal"));
 
   $$(".close").forEach(button => {
     button.addEventListener("click", () => closeModal(button.dataset.close));
